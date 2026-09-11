@@ -1,0 +1,39 @@
+<svg width="480" height="420" viewBox="0 0 480 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aboutGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B5BDB"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="240" cy="210" r="190" fill="#F1EEFE"/>
+  <circle cx="80" cy="90" r="40" fill="#EAF0FF"/>
+
+  <!-- Clipboard -->
+  <rect x="150" y="90" width="180" height="230" rx="14" fill="#ffffff" stroke="#E6E6FB" stroke-width="2"/>
+  <rect x="180" y="70" width="120" height="30" rx="8" fill="url(#aboutGrad)"/>
+  <rect x="172" y="130" width="136" height="10" rx="5" fill="#EAF0FF"/>
+  <rect x="172" y="152" width="100" height="10" rx="5" fill="#EAF0FF"/>
+  <rect x="172" y="184" width="136" height="10" rx="5" fill="#F1EEFE"/>
+  <rect x="172" y="206" width="80" height="10" rx="5" fill="#F1EEFE"/>
+
+  <!-- Checklist ticks -->
+  <circle cx="188" cy="248" r="9" fill="#3B5BDB"/>
+  <path d="M184 248l3 4 7-8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="204" y="243" width="90" height="10" rx="5" fill="#EAF0FF"/>
+
+  <circle cx="188" cy="278" r="9" fill="#8B5CF6"/>
+  <path d="M184 278l3 4 7-8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="204" y="273" width="70" height="10" rx="5" fill="#F1EEFE"/>
+
+  <!-- Therapist figure -->
+  <circle cx="360" cy="230" r="26" fill="#2C46B0"/>
+  <path d="M330 320c0-30 14-50 30-50s30 20 30 50" fill="url(#aboutGrad)"/>
+  <path d="M356 270l-24 20" stroke="#3B5BDB" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="328" cy="292" r="7" fill="#2C46B0"/>
+
+  <!-- decorative pulse -->
+  <path d="M60 340 h30 l8 -18 l12 34 l8 -16 h30" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="420" cy="120" r="6" fill="#3B5BDB"/>
+  <circle cx="60" cy="180" r="5" fill="#8B5CF6"/>
+</svg>

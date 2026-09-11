@@ -1,0 +1,157 @@
+.hero-banner {
+  background: linear-gradient(160deg, var(--blue-light) 0%, var(--purple-light) 55%, #fff 100%);
+  padding: 40px 0 56px;
+}
+
+.hero-banner-img {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.hero-banner-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.care-paths-section .section-header {
+  max-width: 620px;
+}
+
+.care-paths {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.care-path-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.care-path-tag {
+  display: inline-block;
+  align-self: flex-start;
+  background: var(--purple-light);
+  color: var(--blue-dark);
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.care-path-points {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.care-path-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.care-path-points svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--blue);
+}
+
+.care-paths-note {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 28px auto 0;
+  max-width: 520px;
+}
+
+.service-card {
+  text-align: center;
+  font-size: 1rem;
+}
+
+.service-card .icon-badge {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.service-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--blue-dark);
+}
+
+.step-card {
+  position: relative;
+}
+
+.step-number {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--gradient-brand);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.testimonial-card .quote {
+  font-style: italic;
+  color: var(--ink);
+}
+
+.quote-name {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.cta-section {
+  background: var(--gradient-brand);
+  border-radius: 24px;
+  max-width: 1180px;
+  margin: 0 auto 72px;
+}
+
+.cta-inner {
+  text-align: center;
+  color: #fff;
+}
+
+.cta-inner p {
+  color: #e6e6ff;
+}
+
+.cta-inner .btn-primary {
+  background: #fff;
+  color: var(--blue-dark);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cta-inner .btn-primary:hover {
+  filter: none;
+  background: var(--purple-light);
+}
+
+@media (max-width: 720px) {
+  .cta-section {
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+}

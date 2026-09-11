@@ -1,0 +1,21 @@
+.service-detail-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tag-chip {
+  background: var(--purple-light);
+  color: var(--blue-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}

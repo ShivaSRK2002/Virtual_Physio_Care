@@ -1,0 +1,19 @@
+.about-story {
+  align-items: center;
+}
+
+.about-image img {
+  max-width: 420px;
+  margin: 0 auto;
+  filter: drop-shadow(0 20px 34px rgba(59, 91, 219, 0.15));
+}
+
+@media (max-width: 860px) {
+  .about-story {
+    grid-template-columns: 1fr;
+  }
+
+  .about-image {
+    order: -1;
+  }
+}
