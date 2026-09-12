@@ -1,24 +1,12 @@
 import { useSearchParams } from "react-router-dom";
-import BookingForm from "../components/BookingForm";
+import EnquiryForm from "../components/EnquiryForm";
 import { CONTACT } from "../config";
 import bookingCalendar from "../assets/illustrations/booking-calendar.svg";
 import "./Contact.css";
 
-const INTENT_COPY = {
-  online: {
-    label: "You're booking: Online Video Consultation (Worldwide)",
-    hint: "Available from anywhere — we'll schedule around your local time zone.",
-  },
-  "home-visit": {
-    label: "You're booking: In-Home Visit (Chennai)",
-    hint: "Available across Chennai — let us know your area and preferred time.",
-  },
-};
-
 export default function Contact() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
-  const intent = INTENT_COPY[type];
 
   return (
     <>
@@ -67,13 +55,7 @@ export default function Contact() {
           </div>
 
           <div id="booking">
-            {intent && (
-              <div className="booking-intent-banner">
-                <strong>{intent.label}</strong>
-                <span>{intent.hint}</span>
-              </div>
-            )}
-            <BookingForm type={type} />
+            <EnquiryForm defaultType={type} />
           </div>
         </div>
       </section>
