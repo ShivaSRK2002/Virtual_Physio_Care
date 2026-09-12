@@ -92,8 +92,18 @@
   gap: 4px;
   background: none;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
   padding: 6px;
+}
+
+.nav-toggle:focus {
+  outline: none;
+}
+
+.nav-toggle:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .nav-toggle span {
