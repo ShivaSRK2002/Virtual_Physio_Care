@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from "../assets/images/logo.jpg";
 import "./Navbar.css";
@@ -54,9 +54,9 @@ export default function Navbar() {
               {link.label}
             </NavLink>
           ))}
-          <NavLink to="/contact#booking" className="btn btn-primary nav-cta" onClick={() => setOpen(false)}>
+          <Link to="/contact#booking" className="btn btn-primary nav-cta" onClick={() => setOpen(false)}>
             Book a Session
-          </NavLink>
+          </Link>
         </nav>
       </div>
     </header>

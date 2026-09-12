@@ -78,7 +78,12 @@
 }
 
 .nav-cta.btn {
+  color: #fff;
   border-bottom: none !important;
+}
+
+.nav-cta.btn:hover {
+  color: #fff;
 }
 
 .nav-toggle {
