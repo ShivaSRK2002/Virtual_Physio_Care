@@ -6,6 +6,26 @@
   scroll-margin-top: 96px;
 }
 
+.booking-intent-banner {
+  background: var(--gradient-brand);
+  color: #fff;
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-intent-banner strong {
+  font-size: 0.95rem;
+}
+
+.booking-intent-banner span {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .contact-info {
   display: flex;
   flex-direction: column;
