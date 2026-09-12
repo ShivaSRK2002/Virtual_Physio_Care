@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { CONTACT } from "../config";
 import logo from "../assets/images/logo.jpg";
+import SocialIcons from "./SocialIcons";
 import "./Footer.css";
 
 export default function Footer() {
@@ -15,6 +16,7 @@ export default function Footer() {
             Certified online physiotherapy for patients in India and abroad —
             accessible, affordable, and convenient care from wherever you are.
           </p>
+          <SocialIcons />
         </div>
 
         <div className="footer-col">

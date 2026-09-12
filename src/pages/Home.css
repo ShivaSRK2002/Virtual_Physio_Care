@@ -155,3 +155,26 @@
     margin-bottom: 0;
   }
 }
+
+@media (max-width: 480px) {
+  .hero-banner {
+    padding: 24px 0 40px;
+  }
+
+  .hero-banner-img {
+    border-radius: 14px;
+  }
+
+  .hero-banner-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-banner-actions .btn {
+    width: 100%;
+  }
+
+  .care-path-card .btn {
+    font-size: 0.9rem;
+  }
+}

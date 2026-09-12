@@ -89,3 +89,14 @@
   font-weight: 600;
   text-decoration: none;
 }
+
+@media (max-width: 480px) {
+  .blog-post-cta {
+    padding: 22px 18px;
+    border-radius: 16px;
+  }
+
+  .blog-post-content h2 {
+    font-size: 1.15rem;
+  }
+}

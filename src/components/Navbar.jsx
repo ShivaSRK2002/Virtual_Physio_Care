@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import logo from "../assets/images/logo.jpg";
 import "./Navbar.css";
 
@@ -14,8 +14,15 @@ const links = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
-    <header className="navbar">
+    <header className={`navbar ${open ? "menu-open" : ""}`}>
       <div className="navbar-inner">
         <NavLink to="/" className="brand" onClick={() => setOpen(false)}>
           <span className="brand-mark">

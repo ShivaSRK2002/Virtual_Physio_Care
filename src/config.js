@@ -22,6 +22,8 @@ export const CONTACT = {
   email: "Virtualphysiocare@gmail.com",
   hoursIndia: "Mon – Sat, 8:00 AM – 8:00 PM IST",
   hoursInternational: "By appointment, across time zones",
+  // TODO: replace with your real Instagram handle once you have one.
+  instagram: "https://instagram.com/virtualphysiocare",
 };
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,21 @@
+.social-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.social-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d8e3e2;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.social-icon-link:hover {
+  background: var(--gradient-brand);
+  color: #fff;
+}

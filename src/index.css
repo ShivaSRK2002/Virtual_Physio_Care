@@ -243,3 +243,34 @@ p {
     padding: 52px 0;
   }
 }
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 18px;
+  }
+
+  .section {
+    padding: 40px 0;
+  }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 11px 20px;
+  }
+
+  .btn-lg {
+    padding: 13px 24px;
+  }
+
+  .page-hero {
+    padding: 40px 0 32px;
+  }
+}
