@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import "./BookingForm.css";
 
 const SERVICE_TYPE_LABELS = {
@@ -25,7 +26,6 @@ export default function BookingForm({ type }) {
   }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (!inferredServiceType) {
@@ -49,7 +49,6 @@ export default function BookingForm({ type }) {
     event.preventDefault();
     setIsSubmitting(true);
     setSubmitError("");
-    setSuccessMessage("");
 
     try {
       const response = await fetch("/api/bookings", {
@@ -74,15 +73,15 @@ export default function BookingForm({ type }) {
         throw new Error(message || "Unable to submit your request right now.");
       }
 
-      setSuccessMessage(
-        "Your enquiry was submitted successfully. A confirmation email has been sent to your inbox."
-      );
+      toast.success("Booking submitted successfully. Confirmation email has been sent.");
       setFormData({
         ...INITIAL_FORM,
         serviceType: inferredServiceType,
       });
     } catch (error) {
-      setSubmitError(error.message || "Something went wrong while submitting the form.");
+      const message = error.message || "Something went wrong while submitting the form.";
+      setSubmitError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -171,7 +170,6 @@ export default function BookingForm({ type }) {
       </label>
 
       {submitError && <p className="booking-status booking-error">{submitError}</p>}
-      {successMessage && <p className="booking-status booking-success">{successMessage}</p>}
 
       <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit Booking Request"}

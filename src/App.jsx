@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -31,6 +32,22 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4500,
+          style: {
+            border: "1px solid var(--border)",
+            padding: "12px 14px",
+            color: "var(--ink)",
+          },
+          success: {
+            style: {
+              borderColor: "#9fd8b8",
+            },
+          },
+        }}
+      />
       <Navbar />
       <main>
         <Routes>

@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import { Resend } from "resend";
+import { CONTACT } from "../src/config.js";
 
 const REQUIRED_FIELDS = ["fullName", "email", "phone", "country", "age", "gender", "serviceType"];
 
@@ -13,6 +14,15 @@ function getEnv(name) {
 
 function normalizeText(value) {
   return String(value || "").trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function parseBody(req) {
@@ -83,6 +93,22 @@ function buildSubmission(payload) {
   };
 }
 
+function formatSubmittedAt(isoString) {
+  try {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) {
+      return isoString;
+    }
+    return new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Asia/Kolkata",
+    }).format(date);
+  } catch {
+    return isoString;
+  }
+}
+
 async function appendBookingToSheet(submission) {
   const serviceAccountEmail = getEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKey = getEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").replaceAll(String.raw`\n`, "\n");
@@ -125,45 +151,162 @@ async function sendBookingEmails(submission) {
   const fromEmail = getEnv("RESEND_FROM_EMAIL");
   const clinicEmail = getEnv("CLINIC_NOTIFICATION_EMAIL");
 
+  const supportPhoneRaw = CONTACT.phoneIndia || "Not available";
+  const supportPhone = escapeHtml(supportPhoneRaw);
+  const supportPhoneHref = `tel:${supportPhoneRaw.replaceAll(" ", "")}`;
+  const supportWhatsapp = CONTACT.whatsapp || "";
+  const supportEmailRaw = CONTACT.email || "Not available";
+  const supportEmail = escapeHtml(supportEmailRaw);
+  const supportEmailHref = `mailto:${encodeURIComponent(supportEmailRaw)}`;
+
+  const fullName = escapeHtml(submission.fullName);
+  const customerEmailAddress = escapeHtml(submission.email);
+  const customerPhone = escapeHtml(submission.phone);
+  const country = escapeHtml(submission.country);
+  const age = escapeHtml(submission.age);
+  const gender = escapeHtml(submission.gender);
+  const serviceType = escapeHtml(submission.serviceType);
+  const message = escapeHtml(submission.message || "Not provided");
+  const submittedAtDisplay = escapeHtml(formatSubmittedAt(submission.submittedAt));
+  const submissionId = escapeHtml(submission.id);
+
+  const customerHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e2540; max-width: 640px; margin: 0 auto; background: #ffffff; border: 1px solid #e6e6fb; border-radius: 12px; overflow: hidden;">
+      <div style="padding: 16px 20px; background: #f2f5ff; border-bottom: 1px solid #e6e6fb;">
+        <p style="margin: 0; font-size: 13px; color: #2c46b0; font-weight: 700; letter-spacing: 0.3px;">VIRTUAL PHYSIO CARE</p>
+        <h2 style="margin: 6px 0 0; color: #1e2540; font-size: 22px;">Booking Request Confirmation</h2>
+      </div>
+
+      <div style="padding: 20px;">
+        <p style="margin: 0 0 12px;">Hello ${fullName},</p>
+        <p style="margin: 0 0 14px;">Thank you for your booking enquiry. We have received your request successfully, and our team will contact you shortly to confirm your session timing and next steps.</p>
+
+        <div style="background: #f9faff; border: 1px solid #e6e6fb; border-radius: 10px; padding: 14px; margin: 16px 0;">
+          <p style="margin: 0 0 8px;"><strong>Reference ID:</strong> ${submissionId}</p>
+          <p style="margin: 0 0 8px;"><strong>Service:</strong> ${serviceType}</p>
+          <p style="margin: 0;"><strong>Submitted On:</strong> ${submittedAtDisplay}</p>
+        </div>
+
+        <p style="margin: 0 0 8px;"><strong>What happens next:</strong></p>
+        <ul style="margin: 0 0 16px 18px; padding: 0;">
+          <li>Our team reviews your request.</li>
+          <li>We contact you to confirm your consultation details.</li>
+          <li>Your session plan is initiated.</li>
+        </ul>
+
+        <p style="margin: 0 0 8px;"><strong>For any queries, contact us:</strong></p>
+        <p style="margin: 0;">Phone/WhatsApp: <a href="${supportPhoneHref}" style="color: #2c46b0; text-decoration: none;">${supportPhone}</a></p>
+        <p style="margin: 4px 0 16px;">Email: <a href="${supportEmailHref}" style="color: #2c46b0; text-decoration: none;">${supportEmail}</a></p>
+
+        <p style="margin: 0;">Regards,<br />Virtual Physio Care Team</p>
+      </div>
+
+      <div style="padding: 12px 20px; border-top: 1px solid #e6e6fb; background: #fcfcff; font-size: 12px; color: #6b7390;">
+        This is an automated confirmation email for your recent enquiry.
+      </div>
+    </div>
+  `;
+
+  const customerText = [
+    "Booking Request Confirmation | Virtual Physio Care",
+    "",
+    `Hello ${submission.fullName},`,
+    "",
+    "Thank you for your booking enquiry. We have received your request successfully.",
+    "Our team will contact you shortly to confirm your session details and next steps.",
+    "",
+    `Reference ID: ${submission.id}`,
+    `Service: ${submission.serviceType}`,
+    `Submitted On: ${formatSubmittedAt(submission.submittedAt)}`,
+    "",
+    "What happens next:",
+    "1) Our team reviews your request",
+    "2) We contact you to confirm your consultation details",
+    "3) Your session plan is initiated",
+    "",
+    `For any queries, call/WhatsApp: ${CONTACT.phoneIndia}`,
+    `For any queries, email: ${supportEmailRaw}`,
+    "",
+    "Regards,",
+    "Virtual Physio Care Team",
+  ].join("\n");
+
+  const quickWhatsapp = supportWhatsapp
+    ? `<a href="${escapeHtml(supportWhatsapp)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #25d366; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">WhatsApp</a>`
+    : "";
+
+  const clinicHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e2540; max-width: 720px; margin: 0 auto; background: #ffffff; border: 1px solid #e6e6fb; border-radius: 12px; overflow: hidden;">
+      <div style="padding: 16px 20px; background: #f2f5ff; border-bottom: 1px solid #e6e6fb;">
+        <p style="margin: 0; font-size: 13px; color: #2c46b0; font-weight: 700; letter-spacing: 0.3px;">VIRTUAL PHYSIO CARE</p>
+        <h2 style="margin: 6px 0 0; color: #1e2540; font-size: 22px;">New Booking Enquiry</h2>
+      </div>
+
+      <div style="padding: 20px;">
+        <p style="margin: 0 0 8px;"><strong>Reference ID:</strong> ${submissionId}</p>
+        <p style="margin: 0 0 14px;"><strong>Submitted On:</strong> ${submittedAtDisplay}</p>
+
+        <div style="margin: 0 0 14px;">
+          <a href="mailto:${encodeURIComponent(submission.email)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #2c46b0; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">Email Patient</a>
+          <a href="tel:${submission.phone.replaceAll(" ", "")}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #0b7a4b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">Call Patient</a>
+          ${quickWhatsapp}
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e6e6fb; border-radius: 10px; overflow: hidden;">
+          <tbody>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff; width: 35%;"><strong>Name</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${fullName}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff;"><strong>Email</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${customerEmailAddress}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff;"><strong>Phone</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${customerPhone}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff;"><strong>Country</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${country}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff;"><strong>Age</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${age}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff;"><strong>Gender</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${gender}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eef0ff;"><strong>Service</strong></td><td style="padding: 10px; border-bottom: 1px solid #eef0ff;">${serviceType}</td></tr>
+            <tr><td style="padding: 10px;"><strong>Message</strong></td><td style="padding: 10px;">${message}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="padding: 12px 20px; border-top: 1px solid #e6e6fb; background: #fcfcff; font-size: 12px; color: #6b7390;">
+        This notification was generated from the Virtual Physio Care website booking form.
+      </div>
+    </div>
+  `;
+
+  const clinicText = [
+    "New Booking Enquiry | Virtual Physio Care",
+    "",
+    `Reference ID: ${submission.id}`,
+    `Submitted On: ${formatSubmittedAt(submission.submittedAt)}`,
+    `Name: ${submission.fullName}`,
+    `Email: ${submission.email}`,
+    `Phone: ${submission.phone}`,
+    `Country: ${submission.country}`,
+    `Age: ${submission.age}`,
+    `Gender: ${submission.gender}`,
+    `Service: ${submission.serviceType}`,
+    `Message: ${submission.message || "Not provided"}`,
+    "",
+    "Quick actions:",
+    `Call patient: ${submission.phone}`,
+    `Email patient: ${submission.email}`,
+  ].join("\n");
+
   const customerEmail = resend.emails.send({
     from: fromEmail,
     to: [submission.email],
-    subject: "Booking request received - Virtual Physio Care",
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e2540;">
-        <h2 style="margin-bottom: 8px;">Hello ${submission.fullName},</h2>
-        <p>Thank you for your enquiry. We have received your booking request successfully.</p>
-        <p>Our team will contact you shortly to confirm your session details.</p>
-        <h3 style="margin: 20px 0 8px;">Submitted details</h3>
-        <ul>
-          <li><strong>Age:</strong> ${submission.age}</li>
-          <li><strong>Gender:</strong> ${submission.gender}</li>
-          <li><strong>Service:</strong> ${submission.serviceType}</li>
-        </ul>
-        <p>Regards,<br />Virtual Physio Care</p>
-      </div>
-    `,
+    replyTo: [supportEmailRaw],
+    subject: "Booking Request Confirmation | Virtual Physio Care",
+    html: customerHtml,
+    text: customerText,
   });
 
   const clinicNotification = resend.emails.send({
     from: fromEmail,
     to: [clinicEmail],
-    subject: `New booking request: ${submission.fullName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e2540;">
-        <h2 style="margin-bottom: 8px;">New booking request</h2>
-        <p><strong>Submission ID:</strong> ${submission.id}</p>
-        <p><strong>Submitted At:</strong> ${submission.submittedAt}</p>
-        <p><strong>Name:</strong> ${submission.fullName}</p>
-        <p><strong>Email:</strong> ${submission.email}</p>
-        <p><strong>Phone:</strong> ${submission.phone}</p>
-        <p><strong>Country:</strong> ${submission.country}</p>
-        <p><strong>Age:</strong> ${submission.age}</p>
-        <p><strong>Gender:</strong> ${submission.gender}</p>
-        <p><strong>Service:</strong> ${submission.serviceType}</p>
-        <p><strong>Message:</strong> ${submission.message || "Not provided"}</p>
-      </div>
-    `,
+    replyTo: [submission.email],
+    subject: `New Booking Enquiry | ${submission.fullName}`,
+    html: clinicHtml,
+    text: clinicText,
   });
 
   await Promise.all([customerEmail, clinicNotification]);
