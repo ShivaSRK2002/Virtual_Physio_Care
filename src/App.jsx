@@ -34,16 +34,26 @@ export default function App() {
       <ScrollToTop />
       <Toaster
         position="top-right"
+        gutter={12}
         toastOptions={{
           duration: 4500,
           style: {
             border: "1px solid var(--border)",
+            borderRadius: "10px",
             padding: "12px 14px",
             color: "var(--ink)",
+            boxShadow: "0 10px 24px rgba(30, 37, 64, 0.14)",
+            maxWidth: "460px",
           },
           success: {
             style: {
               borderColor: "#9fd8b8",
+            },
+          },
+          error: {
+            duration: 5200,
+            style: {
+              borderColor: "#f3b0b0",
             },
           },
         }}

@@ -3,6 +3,22 @@ import { Resend } from "resend";
 import { CONTACT } from "../src/config.js";
 
 const REQUIRED_FIELDS = ["fullName", "email", "phone", "country", "age", "gender", "serviceType"];
+const GENDER_OPTIONS = new Set(["Male", "Female", "Other", "Prefer not to say"]);
+const SERVICE_OPTIONS = new Set([
+  "Online Video Consultation",
+  "In-Home Visit (Chennai)",
+  "Weight Loss & Strength Training Fitness",
+]);
+const REQUIRED_MESSAGES = {
+  fullName: "Please enter your full name.",
+  email: "Please enter your email address.",
+  phone: "Please enter your phone or WhatsApp number.",
+  country: "Please enter your country.",
+  age: "Please enter your age.",
+  gender: "Please select your gender.",
+  serviceType: "Please select a service type.",
+};
+const MAX_MESSAGE_LENGTH = 500;
 
 function getEnv(name) {
   const raw = process.env[name];
@@ -42,8 +58,80 @@ function parseBody(req) {
   return {};
 }
 
-function getMissingFields(payload) {
-  return REQUIRED_FIELDS.filter((field) => !normalizeText(payload[field]));
+function digitsOnly(value) {
+  return String(value || "").replaceAll(/\D/g, "");
+}
+
+function isLikelyEmail(value) {
+  const email = String(value || "").trim();
+  if (!email || email.includes(" ")) {
+    return false;
+  }
+
+  const atIndex = email.indexOf("@");
+  const lastAtIndex = email.lastIndexOf("@");
+  if (atIndex <= 0 || atIndex !== lastAtIndex) {
+    return false;
+  }
+
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.indexOf(".");
+  return dotIndex > 0 && dotIndex < domain.length - 1;
+}
+
+const FIELD_VALIDATORS = {
+  fullName: (value) => (value.length >= 2 ? "" : "Full name should be at least 2 characters."),
+  email: (value) => (isLikelyEmail(value) ? "" : "Please enter a valid email address."),
+  phone: (value) => {
+    const digits = digitsOnly(value);
+    return digits.length >= 8 && digits.length <= 15 ? "" : "Phone number should contain 8 to 15 digits.";
+  },
+  country: (value) => (value.length >= 2 ? "" : "Country name is too short."),
+  age: (value) => {
+    const age = Number(value);
+    return Number.isInteger(age) && age >= 1 && age <= 120
+      ? ""
+      : "Please enter a valid age between 1 and 120.";
+  },
+  gender: (value) => (GENDER_OPTIONS.has(value) ? "" : "Please select a valid gender option."),
+  serviceType: (value) =>
+    SERVICE_OPTIONS.has(value) ? "" : "Please select a valid service type.",
+  message: (value) =>
+    value.length <= MAX_MESSAGE_LENGTH ? "" : `Message should be within ${MAX_MESSAGE_LENGTH} characters.`,
+};
+
+function validateSubmissionPayload(payload) {
+  const values = {
+    fullName: normalizeText(payload.fullName),
+    email: normalizeText(payload.email),
+    phone: normalizeText(payload.phone),
+    country: normalizeText(payload.country),
+    age: normalizeText(payload.age),
+    gender: normalizeText(payload.gender),
+    serviceType: normalizeText(payload.serviceType),
+    message: normalizeText(payload.message),
+  };
+
+  const errors = {};
+  for (const field of REQUIRED_FIELDS) {
+    if (!values[field]) {
+      errors[field] = REQUIRED_MESSAGES[field] || "This field is required.";
+      continue;
+    }
+
+    const validator = FIELD_VALIDATORS[field];
+    const validationError = validator ? validator(values[field]) : "";
+    if (validationError) {
+      errors[field] = validationError;
+    }
+  }
+
+  const messageError = FIELD_VALIDATORS.message(values.message);
+  if (messageError) {
+    errors.message = messageError;
+  }
+
+  return errors;
 }
 
 function getMissingEnvVars() {
@@ -109,6 +197,69 @@ function formatSubmittedAt(isoString) {
   }
 }
 
+const COUNTRY_DIAL_CODES = {
+  india: "+91",
+  usa: "+1",
+  "united states": "+1",
+  "united states of america": "+1",
+  canada: "+1",
+  uk: "+44",
+  "united kingdom": "+44",
+  england: "+44",
+  scotland: "+44",
+  wales: "+44",
+  ireland: "+353",
+  australia: "+61",
+  singapore: "+65",
+  malaysia: "+60",
+  uae: "+971",
+  "united arab emirates": "+971",
+  qatar: "+974",
+  kuwait: "+965",
+  oman: "+968",
+  "saudi arabia": "+966",
+  germany: "+49",
+  france: "+33",
+  italy: "+39",
+  spain: "+34",
+  "south africa": "+27",
+  "new zealand": "+64",
+};
+
+function countryToDialCode(country) {
+  const key = normalizeText(country).toLowerCase();
+  return COUNTRY_DIAL_CODES[key] || "";
+}
+
+function toPatientContactLinks(phone, country) {
+  const rawPhone = normalizeText(phone);
+  const compact = rawPhone.replaceAll(/[^\d+]/g, "");
+
+  let e164 = "";
+  if (compact.startsWith("+")) {
+    const digits = compact.slice(1).replaceAll(/\D/g, "");
+    e164 = digits ? `+${digits}` : "";
+  } else if (compact.startsWith("00")) {
+    const digits = compact.slice(2).replaceAll(/\D/g, "");
+    e164 = digits ? `+${digits}` : "";
+  } else {
+    const localDigits = compact.replaceAll(/\D/g, "").replace(/^0+/, "");
+    const dialCode = countryToDialCode(country);
+    if (dialCode && localDigits) {
+      e164 = `${dialCode}${localDigits}`;
+    } else if (localDigits) {
+      e164 = `+${localDigits}`;
+    }
+  }
+
+  const whatsappDigits = e164.replaceAll(/\D/g, "");
+  return {
+    e164,
+    telHref: e164 ? `tel:${e164}` : "",
+    whatsappHref: whatsappDigits ? `https://wa.me/${whatsappDigits}` : "",
+  };
+}
+
 async function appendBookingToSheet(submission) {
   const serviceAccountEmail = getEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKey = getEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").replaceAll(String.raw`\n`, "\n");
@@ -154,10 +305,10 @@ async function sendBookingEmails(submission) {
   const supportPhoneRaw = CONTACT.phoneIndia || "Not available";
   const supportPhone = escapeHtml(supportPhoneRaw);
   const supportPhoneHref = `tel:${supportPhoneRaw.replaceAll(" ", "")}`;
-  const supportWhatsapp = CONTACT.whatsapp || "";
   const supportEmailRaw = CONTACT.email || "Not available";
   const supportEmail = escapeHtml(supportEmailRaw);
   const supportEmailHref = `mailto:${encodeURIComponent(supportEmailRaw)}`;
+  const patientContacts = toPatientContactLinks(submission.phone, submission.country);
 
   const fullName = escapeHtml(submission.fullName);
   const customerEmailAddress = escapeHtml(submission.email);
@@ -231,8 +382,12 @@ async function sendBookingEmails(submission) {
     "Virtual Physio Care Team",
   ].join("\n");
 
-  const quickWhatsapp = supportWhatsapp
-    ? `<a href="${escapeHtml(supportWhatsapp)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #25d366; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">WhatsApp</a>`
+  const quickEmailPatient = `<a href="mailto:${encodeURIComponent(submission.email)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #2c46b0; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">Email Patient</a>`;
+  const quickCallPatient = patientContacts.telHref
+    ? `<a href="${escapeHtml(patientContacts.telHref)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #0b7a4b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">Call Patient</a>`
+    : "";
+  const quickWhatsappPatient = patientContacts.whatsappHref
+    ? `<a href="${escapeHtml(patientContacts.whatsappHref)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #25d366; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">WhatsApp Patient</a>`
     : "";
 
   const clinicHtml = `
@@ -247,9 +402,9 @@ async function sendBookingEmails(submission) {
         <p style="margin: 0 0 14px;"><strong>Submitted On:</strong> ${submittedAtDisplay}</p>
 
         <div style="margin: 0 0 14px;">
-          <a href="mailto:${encodeURIComponent(submission.email)}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #2c46b0; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">Email Patient</a>
-          <a href="tel:${submission.phone.replaceAll(" ", "")}" style="display: inline-block; margin-right: 8px; margin-top: 8px; padding: 8px 12px; background: #0b7a4b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px;">Call Patient</a>
-          ${quickWhatsapp}
+          ${quickEmailPatient}
+          ${quickCallPatient}
+          ${quickWhatsappPatient}
         </div>
 
         <table style="width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e6e6fb; border-radius: 10px; overflow: hidden;">
@@ -289,6 +444,7 @@ async function sendBookingEmails(submission) {
     "Quick actions:",
     `Call patient: ${submission.phone}`,
     `Email patient: ${submission.email}`,
+    `WhatsApp patient: ${patientContacts.whatsappHref || "Not available"}`,
   ].join("\n");
 
   const customerEmail = resend.emails.send({
@@ -326,10 +482,14 @@ export default async function handler(req, res) {
   }
 
   const payload = parseBody(req);
-  const missingFields = getMissingFields(payload);
-  if (missingFields.length > 0) {
+  const fieldErrors = validateSubmissionPayload(payload);
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
+  if (hasFieldErrors) {
+    const firstError = Object.values(fieldErrors)[0];
     return res.status(400).json({
-      error: `Please fill all required fields: ${missingFields.join(", ")}`,
+      error: "Please review the highlighted fields.",
+      details: firstError,
+      fieldErrors,
     });
   }
 

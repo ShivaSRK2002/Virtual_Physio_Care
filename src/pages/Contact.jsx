@@ -7,11 +7,11 @@ import "./Contact.css";
 const INTENT_COPY = {
   online: {
     label: "You're booking: Online Video Consultation (Worldwide)",
-    hint: "Available from anywhere — we'll schedule around your local time zone.",
+    hint: "Available from anywhere. Share your preferred schedule in the message field.",
   },
   "home-visit": {
     label: "You're booking: In-Home Visit (Chennai)",
-    hint: "Available across Chennai — let us know your area and preferred time.",
+    hint: "Available across Chennai. Mention your area and preferred timing in the message field.",
   },
 };
 
@@ -27,8 +27,8 @@ export default function Contact() {
           <div className="eyebrow">Contact & Booking</div>
           <h1>Book a Free Enquiry</h1>
           <p>
-            Fill in the form below with your details and concern. Our team will get back to you
-            within 24 hours to confirm your session.
+            Fill in the form below with your details. Our team will get back to you within 24 hours
+            to confirm your session.
           </p>
         </div>
       </section>
