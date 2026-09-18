@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "googleapis": "^162.0.0",
     "lucide-react": "^1.45.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.3"
+    "react-router-dom": "^7.18.3",
+    "resend": "^4.8.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

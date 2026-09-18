@@ -1,9 +1,13 @@
 # Virtual Physio Care
 
 Marketing + enquiry website for an online physiotherapy service serving patients in India
-and abroad. Built with React + Vite. There is no custom backend — patient enquiries are
-collected through an embedded **Google Form**, with responses landing in a linked
-**Google Sheet** that you can view/export/share.
+and abroad. Built with React + Vite. The Contact page uses a custom booking form that
+submits to a Vercel API endpoint.
+
+On each submission:
+- the customer receives a success/confirmation email
+- the clinic receives a new-booking notification email
+- submission data is appended to Google Sheets for tracking/export
 
 ## Pages
 
@@ -12,26 +16,60 @@ collected through an embedded **Google Form**, with responses landing in a linke
 - **About** — story, values
 - **Services** — full breakdown of physiotherapy services offered
 - **Blog** — SEO articles targeting real search terms ([src/data/blogPosts.js](src/data/blogPosts.js))
-- **Contact** — contact details + embedded booking/enquiry form
+- **Contact** — contact details + in-app booking/enquiry form
 - **Privacy Policy** — required for Google/Meta ads and basic patient-data trust
 
-## One-time setup: connect the Google Form
+## One-time setup: custom booking form backend
 
-1. Go to [forms.google.com](https://forms.google.com) and create a new form with fields such
-   as: Name, Email, Phone/WhatsApp, Country, Concern/Injury, Preferred Date & Time, Message.
-2. Click **Responses** tab → click the green Sheets icon to create a linked Google Sheet.
-   All submissions will appear there in real time.
-3. Click **Send** → the `<>` embed icon → copy the `src` URL from the generated `<iframe>`
-   (looks like `https://docs.google.com/forms/d/e/XXXXXXXX/viewform?embedded=true`).
-4. Open [src/config.js](src/config.js) and paste that URL into `GOOGLE_FORM_EMBED_URL`
-   (and the same link without `?embedded=true` into `GOOGLE_FORM_LINK`).
-5. Update `CONTACT` in the same file with your real phone/WhatsApp number and email.
-6. Optional — to have the "Book an Online Session" vs. "Book a Home Visit" buttons pre-select
-   the right option in your form, follow the steps above `GOOGLE_FORM_SERVICE_TYPE_ENTRY_ID`
-   in [src/config.js](src/config.js).
+### 1) Create and prepare Google Sheet for booking data
 
-No other code changes are needed — the Contact page automatically embeds whatever form URL
-you configure.
+1. Create a Google Sheet and name one tab `Bookings`.
+2. Add header columns in row 1 (A to J):
+   - submission_id
+   - submitted_at
+   - full_name
+   - email
+   - phone
+   - country
+   - age
+   - gender
+   - service_type
+   - message
+3. Copy the Sheet ID from the URL:
+   - `https://docs.google.com/spreadsheets/d/<SHEET_ID>/edit`
+
+### 2) Create Google service account and share sheet
+
+1. Open Google Cloud Console and create a project (or use existing).
+2. Enable Google Sheets API for that project.
+3. Create a Service Account and generate a JSON key.
+4. Copy the service account email from JSON and share the Google Sheet with that email as Editor.
+5. Copy the `private_key` value from the JSON for environment variable setup.
+
+### 3) Set up email sending (Resend)
+
+1. Create a Resend account.
+2. Verify your sending domain and create a sender email (for example, `bookings@yourdomain.com`).
+3. Create an API key.
+
+### 4) Add environment variables in Vercel project settings
+
+Set these variables:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `CLINIC_NOTIFICATION_EMAIL`
+- `GOOGLE_SHEET_ID`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+- `GOOGLE_BOOKING_SHEET_NAME` (optional, defaults to `Bookings`)
+
+Important for `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`:
+- store it with escaped newlines (`\n`) if you paste in one line
+
+### 5) Update contact details
+
+Update phone/email/Instagram details in [src/config.js](src/config.js).
 
 ## Development
 
@@ -50,6 +88,14 @@ npm run build
 
 Output goes to `dist/`. Deploy it to any static host — Netlify, Vercel, GitHub Pages, or
 your own hosting.
+
+## API endpoint
+
+- Endpoint: `POST /api/bookings`
+- Handler: [api/bookings.js](api/bookings.js)
+- Payload fields:
+   - fullName, email, phone, country, age, gender, serviceType (required)
+   - message (optional)
 
 **Important:** this site uses client-side routing (React Router) with pages like `/blog/some-post`.
 Most static hosts need an explicit rewrite rule so that any unknown path serves `index.html`
