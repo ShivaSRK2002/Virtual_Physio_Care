@@ -1,0 +1,79 @@
+.programs-grid {
+  align-items: stretch;
+}
+
+.program-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.program-card h2 {
+  margin-bottom: 4px;
+  color: var(--blue-dark);
+  font-size: 1.3rem;
+}
+
+.program-subtitle {
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+.program-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.program-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--blue-dark);
+  background: var(--blue-light);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.program-points {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  display: grid;
+  gap: 8px;
+}
+
+.program-points li {
+  line-height: 1.45;
+}
+
+.program-fee {
+  margin: 2px 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--blue-dark);
+}
+
+.program-badges {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.program-badges .pill {
+  background: var(--purple-light);
+}
+
+.programs-cta {
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .program-card h2 {
+    font-size: 1.16rem;
+  }
+}

@@ -36,7 +36,7 @@ const services = [
   {
     icon: Dumbbell,
     title: "Wellness & Weight Management",
-    tags: ["Strength", "Flexibility", "Mobility", "Posture Correction", "Fall Prevention", "Weight Loss Programs"],
+    tags: ["Strength", "Flexibility", "Mobility", "Posture Correction", "Fall Prevention", "Weight Loss Fitness"],
   },
 ];
 
