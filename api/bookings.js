@@ -40,6 +40,26 @@ function getMissingEnvVars() {
   return requiredEnvVars.filter((name) => !process.env[name]);
 }
 
+function getErrorDetails(error) {
+  if (!error) {
+    return "Unknown error";
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+
+  const apiMessage = error?.response?.data?.error?.message;
+  if (apiMessage) {
+    return apiMessage;
+  }
+
+  if (error.message) {
+    return error.message;
+  }
+
+  return "Unknown error";
+}
+
 function buildSubmission(payload) {
   return {
     id: `BOOK-${Date.now()}`,
@@ -163,17 +183,29 @@ export default async function handler(req, res) {
 
   try {
     await appendBookingToSheet(submission);
-    await sendBookingEmails(submission);
-
-    return res.status(200).json({
-      ok: true,
-      submissionId: submission.id,
-      message: "Booking submitted successfully.",
-    });
   } catch (error) {
-    console.error("Booking submission failed", error);
+    const details = getErrorDetails(error);
+    console.error("Google Sheets append failed", details, error);
     return res.status(500).json({
-      error: "Unable to submit booking right now. Please try again.",
+      error: "Could not save booking data to Google Sheets.",
+      details,
     });
   }
+
+  try {
+    await sendBookingEmails(submission);
+  } catch (error) {
+    const details = getErrorDetails(error);
+    console.error("Resend email delivery failed", details, error);
+    return res.status(500).json({
+      error: "Booking was saved, but confirmation email failed.",
+      details,
+    });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    submissionId: submission.id,
+    message: "Booking submitted successfully.",
+  });
 }

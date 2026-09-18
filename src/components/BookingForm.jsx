@@ -60,9 +60,18 @@ export default function BookingForm({ type }) {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json().catch(() => ({}));
+      let result = {};
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        result = await response.json().catch(() => ({}));
+      } else {
+        await response.text().catch(() => "");
+      }
+
       if (!response.ok) {
-        throw new Error(result.error || "Unable to submit your request right now.");
+        const statusFallback = `Request failed with status ${response.status}.`;
+        const message = result.details ? `${result.error} (${result.details})` : result.error || statusFallback;
+        throw new Error(message || "Unable to submit your request right now.");
       }
 
       setSuccessMessage(
