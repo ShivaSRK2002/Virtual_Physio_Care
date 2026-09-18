@@ -3,6 +3,14 @@ import { Resend } from "resend";
 
 const REQUIRED_FIELDS = ["fullName", "email", "phone", "country", "age", "gender", "serviceType"];
 
+function getEnv(name) {
+  const raw = process.env[name];
+  if (!raw) {
+    return "";
+  }
+  return String(raw).trim().replace(/^"|"$/g, "");
+}
+
 function normalizeText(value) {
   return String(value || "").trim();
 }
@@ -37,7 +45,7 @@ function getMissingEnvVars() {
     "GOOGLE_SERVICE_ACCOUNT_EMAIL",
     "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY",
   ];
-  return requiredEnvVars.filter((name) => !process.env[name]);
+  return requiredEnvVars.filter((name) => !getEnv(name));
 }
 
 function getErrorDetails(error) {
@@ -76,14 +84,17 @@ function buildSubmission(payload) {
 }
 
 async function appendBookingToSheet(submission) {
+  const serviceAccountEmail = getEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+  const privateKey = getEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").replaceAll(String.raw`\n`, "\n");
+
   const auth = new google.auth.JWT({
-    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replaceAll(String.raw`\n`, "\n"),
+    email: serviceAccountEmail,
+    key: privateKey,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
   const sheets = google.sheets({ version: "v4", auth });
-  const sheetName = process.env.GOOGLE_BOOKING_SHEET_NAME || "Bookings";
+  const sheetName = getEnv("GOOGLE_BOOKING_SHEET_NAME") || "Bookings";
 
   const values = [
     [
@@ -101,7 +112,7 @@ async function appendBookingToSheet(submission) {
   ];
 
   await sheets.spreadsheets.values.append({
-    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    spreadsheetId: getEnv("GOOGLE_SHEET_ID"),
     range: `${sheetName}!A1`,
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
@@ -110,9 +121,9 @@ async function appendBookingToSheet(submission) {
 }
 
 async function sendBookingEmails(submission) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const fromEmail = process.env.RESEND_FROM_EMAIL;
-  const clinicEmail = process.env.CLINIC_NOTIFICATION_EMAIL;
+  const resend = new Resend(getEnv("RESEND_API_KEY"));
+  const fromEmail = getEnv("RESEND_FROM_EMAIL");
+  const clinicEmail = getEnv("CLINIC_NOTIFICATION_EMAIL");
 
   const customerEmail = resend.emails.send({
     from: fromEmail,
